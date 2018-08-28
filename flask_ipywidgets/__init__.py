@@ -18,8 +18,8 @@ _kernel_spec = {
     "metadata": {},
 }
 
-http = Blueprint('', __name__)
-websocket = Blueprint('', __name__)
+http = Blueprint('jupyter', __name__)
+websocket = Blueprint('jupyter', __name__)
 
 
 @http.route('/static/<path:path>')
@@ -76,16 +76,14 @@ def kernels(ws, id, name):
                 print('unknown channel', msg['channel'])
 
 
-<<<<<<< Updated upstream
-def app(prefix='/jupyter', app=None):
-    kernel = FlaskKernel.instance()
-    app = app or Flask(__name__)
-=======
-def app(prefix='/'):
+# def app(prefix='/jupyter', app=None):
+#     kernel = FlaskKernel.instance()
+#     app = app or Flask(__name__)
+
+def app(prefix='/jupyter'):
     kernel = FlaskKernel.instance()
     p = str(Path(__file__).parent)
     app = Flask(__name__, static_url_path="")
->>>>>>> Stashed changes
 
     @app.template_filter()
     def ipywidget_view(widget):
