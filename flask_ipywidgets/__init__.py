@@ -1,6 +1,9 @@
-from .kernel import *
+from pathlib import Path
+
+from flask import Flask, Blueprint, send_from_directory
 from flask_sockets import Sockets
 
+from .kernel import *
 
 _kernel_spec = {
     "display_name": "flask_kernel",
@@ -15,10 +18,13 @@ _kernel_spec = {
     "metadata": {},
 }
 
+http = Blueprint('', __name__)
+websocket = Blueprint('', __name__)
 
-from flask import Flask, Blueprint
-http = Blueprint('jupyter', __name__)
-websocket = Blueprint('jupyter', __name__)
+
+@http.route('/static/<path:path>')
+def send_js(path):
+    return send_from_directory('static', path)
 
 
 @http.route('/api/kernelspecs')
@@ -40,10 +46,10 @@ def kernels_normal():
     data = {
         "id": "4a8a8c6c-188c-40aa-8bab-3c79500a4b26",
         "name":
-        "flask_kernel",
+            "flask_kernel",
         "last_activity": "2018-01-30T19:32:04.563616Z",
         "execution_state":
-        "starting",
+            "starting",
         "connections": 0
     }
     return jsonify(data), 201
@@ -53,7 +59,7 @@ def kernels_normal():
 def kernels(ws, id, name):
     print(id, name)
     kernel = FlaskKernel.instance()
-    #kernel.stream.last_ws = ws
+    # kernel.stream.last_ws = ws
     while not ws.closed:
         message = ws.receive()
         if message is not None:
@@ -65,24 +71,32 @@ def kernels(ws, id, name):
             kernel.session.websockets[msg_id] = ws
             if msg['channel'] == 'shell':
                 kernel.dispatch_shell(WebsocketStreamWrapper(ws, msg['channel']), [
-                                      BytesWrap(k) for k in msg_serialized])
+                    BytesWrap(k) for k in msg_serialized])
             else:
                 print('unknown channel', msg['channel'])
 
 
+<<<<<<< Updated upstream
 def app(prefix='/jupyter', app=None):
     kernel = FlaskKernel.instance()
     app = app or Flask(__name__)
+=======
+def app(prefix='/'):
+    kernel = FlaskKernel.instance()
+    p = str(Path(__file__).parent)
+    app = Flask(__name__, static_url_path="")
+>>>>>>> Stashed changes
 
     @app.template_filter()
     def ipywidget_view(widget):
-        from jinja2 import Markup, escape
+        from jinja2 import Markup
         import json
-        return Markup("""<script type="application/vnd.jupyter.widget-view+json">%s</script>""" % json.dumps(widget.get_view_spec()))
+        return Markup("""<script type="application/vnd.jupyter.widget-view+json">%s</script>""" % json.dumps(
+            widget.get_view_spec()))
 
     @app.template_filter()
     def ipywidget_state(widgets):
-        from jinja2 import Markup, escape
+        from jinja2 import Markup
         from ipywidgets import embed as wembed
         drop_defaults = True
         state = wembed.dependency_state(widgets, drop_defaults=drop_defaults)
@@ -93,6 +107,7 @@ def app(prefix='/jupyter', app=None):
         snippet = wembed.snippet_template.format(
             load='', widget_views='', json_data=json_data_str)
         return Markup(snippet)
+
     sockets = Sockets(app)
     app.register_blueprint(http, url_prefix=prefix)
     sockets.register_blueprint(websocket, url_prefix=prefix)
@@ -102,6 +117,7 @@ def app(prefix='/jupyter', app=None):
 def init(app):
     kernel = FlaskKernel.instance()
     sockets = Sockets(app)
+
 
 def main_factory(_app):
     from gevent import pywsgi
