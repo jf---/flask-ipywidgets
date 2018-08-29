@@ -1,15 +1,18 @@
-from flask import Flask, render_template
-import flask_ipywidgets
+from flask import render_template
 
+import flask_ipywidgets
 
 app = flask_ipywidgets.app()
 
 from ipywidgets import IntSlider, Text, VBox
+
 s = IntSlider(max=200, value=100)
 t = Text()
 
+
 def update_text(change=None):
     t.value = str(float(s.value) ** 2)
+
 
 s.observe(update_text, names='value')
 update_text()
